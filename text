@@ -1,0 +1,18 @@
+1ere grosse etape
+  Coder la base du jeu jouable
+  interface graphique
+  input joueur
+  staockage données
+  verification de victoire
+
+2eme grosse etape
+  coder l'IA
+  jeu aleatoire
+  jouer en respectant les regles
+  données de retour
+
+3eme grosse etape
+  ia contre ia
+  gerer les threads
+  gerer les attentes de tour
+  updater la grille si les threads doivent rester actifs
