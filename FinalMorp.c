@@ -27,21 +27,16 @@ int game_size(){
 
 // Afficher le tableau
 void print_board(int N) {
-    for (int k=0;k<N;k++)
-    {
+    for (int k=0;k<N;k++){
         printf("----");
     }
     printf("-\n");
-    
     for (int i = 0; i < N; i++) {
-        for (int j = 0;j<N;j++)
-        {
+        for (int j = 0;j<N;j++){
             if (j==(N-1)){printf("| %c |\n", board[i][j]);}
             else{printf("| %c ", board[i][j]);}
-            
         }
-        for (int l=0;l<N;l++)
-        {
+        for (int l=0;l<N;l++){
             printf("----");
         }
         printf("-\n");
@@ -127,7 +122,7 @@ int avancement =0;//compte le nombre de coups joués
 */
 void play_ia2(char player, int N){
         //sizeof(cases_libres)/sizeof(cases_libres[0]) permets de récupérer la taille du tableau Exemple 9
-    int case_2D = rand() % (sizeof(cases_libres)/sizeof(cases_libres[0]))-avancement;
+    int case_2D = rand() % ((sizeof(cases_libres)/sizeof(cases_libres[0]))-avancement);
         //rand() % 9 retourne un entier entre 0 et 8
     //printf("case2d:%d-",case_2D);
     int val = cases_libres[case_2D];
@@ -141,7 +136,7 @@ void play_ia2(char player, int N){
         cases_libres[i]= cases_libres[i+1];
     }
     avancement++;
-    Sleep(1000);//Attente optionnelle pour que je vois ce qu'il se passe
+    Sleep(300);//Attente optionnelle pour voir ce qu'il se passe
 }
 //Structure pour les threads
 typedef struct entree{
@@ -158,43 +153,62 @@ void init_input(entree *data, char c, int num, int size){
 char player_now = 'X';
 pthread_mutex_t board_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+int finished;
+
 void* play_thread(void* info){
+    int game_over =0;
     entree player = *((entree*)info);
     printf("- %c -\n",player.player);
-    while(1){
+    while(game_over == 0 && finished==0){
         pthread_mutex_lock(&board_mutex);
         if(player.player==player_now){
             play_ia2(player.player,player.board_size);
             print_board(player.board_size);
             
-            int game_over = check_game_over(player.board_size);
-            if (game_over == 1) {
+            game_over = check_game_over(player.board_size);
+            if (game_over == 1 && finished ==0) {
+                finished=1;
                 printf("Joueur %c gagne !\n", player.player);
                 pthread_mutex_unlock(&board_mutex);
-                break;
-            } else if (game_over == 2) {
+                //break;
+            } else if (game_over == 2 && finished==0) {
+                finished=1;
                 printf("Match nul !\n");
                 pthread_mutex_unlock(&board_mutex);
-                break;
+                //break;
             }
             player_now = (player_now == 'X') ? 'O' : 'X';
         }
         pthread_mutex_unlock(&board_mutex);
     }
+    pthread_mutex_unlock(&board_mutex);
+    //player_now = (player_now == 'X') ? 'O' : 'X';
+
     return NULL;
 }
 
 
-
+typedef struct stats{
+    char starter;
+    char winner;
+    double timer;
+    int nb_turn;
+}stats;
 
 // Fonction principale
-int main() {
+stats JEU() {
+    stats s;
+    clock_t begin= clock();
+    finished=0;
+    avancement=0;
+    player_now = 'X';
+    s.starter=player_now;
 
-    srand(time(NULL));
     initialize_board(TAILLE);
     for(int i=0;i<TAILLE*TAILLE;i++){
         cases_libres[i]=i;
     }
+
     pthread_t j1,j2;
     char c1='X',c2='O';
     entree player1, player2;
@@ -202,14 +216,16 @@ int main() {
     init_input(&player2,c2,2,TAILLE);
     /*player1.board_size=TAILLE;
     player1.player='X';
-    player1.p_num = 1;
-*/
+    player1.p_num = 1;*/
     pthread_create(&j1,NULL,play_thread,&player1);
     pthread_create(&j2,NULL,play_thread,&player2);
 
     pthread_join(j1,NULL);
     pthread_join(j2,NULL);
-
+    clock_t end = clock();
+    s.nb_turn=avancement;
+    s.winner = (avancement%2)?'X':'O';
+    s.timer=(double)(end-begin)/CLOCKS_PER_SEC;
     
     /*char player = 'X';
     int game_over = 0, board_size;
@@ -232,5 +248,17 @@ int main() {
         }
     }
     print_board(board_size);*/
+    return s;
+}
+
+int main(){
+    stats statArray[5];
+    srand(time(NULL));
+    for(int i=0;i<5;i++){
+        statArray[i]= JEU();
+    }
+    for(int i=0; i<5; i++){
+        printf("%de partie terminee en %f sec.\n%c gagne en %d coups\n",i+1,statArray[i].timer,statArray[i].winner,statArray[i].nb_turn);
+    }
     return 0;
 }
