@@ -99,16 +99,6 @@ int check_game_over(int N) {
     return 0;
 }
 
-void play_ia(char player, int N){
-    int row, col;
-    row = rand() % N;
-    col = rand() % N;
-    if (row < 0 || row > N-1 || col < 0 || col > N-1 || board[row][col] != ' ') {
-        play_ia(player, N);
-    } else {
-        board[row][col] = player;
-    }
-}
 
 #define TAILLE 3 //Taille de la grille
 int cases_libres[TAILLE*TAILLE];//tableau qui contient les indices des cases vides en 1D
@@ -124,13 +114,13 @@ void play_ia2(char player, int N){
         //sizeof(cases_libres)/sizeof(cases_libres[0]) permets de récupérer la taille du tableau Exemple 9
     int case_2D = rand() % ((sizeof(cases_libres)/sizeof(cases_libres[0]))-avancement);
         //rand() % 9 retourne un entier entre 0 et 8
-    //printf("case2d:%d-",case_2D);
+
     int val = cases_libres[case_2D];
-    //printf("val:%d\n",val);
+
         //conversion de la valeur de la case en 1 Dimension en 2 Dimensions
     int row= val/3;
     int col= val%3;
-    //printf("x:%d y:%d \n",row,col);
+
     board[row][col]=player;
     for(int i = case_2D;i<TAILLE*TAILLE-avancement;i++){    //Décalage du tableau pour supprimer la case occupée
         cases_libres[i]= cases_libres[i+1];
